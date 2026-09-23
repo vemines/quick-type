@@ -60,6 +60,71 @@ pub struct ExpansionJob {
 static INJECTOR_SENDER: once_cell::sync::Lazy<Mutex<Option<std::sync::mpsc::Sender<ExpansionJob>>>> =
     once_cell::sync::Lazy::new(|| Mutex::new(None));
 
+#[link(name = "kernel32")]
+extern "system" {
+    fn GetDateFormatEx(
+        lpLocaleName: *const u16,
+        dwFlags: u32,
+        lpDate: *const std::ffi::c_void,
+        lpFormat: *const u16,
+        lpDateStr: *mut u16,
+        cchDate: i32,
+        lpCalendar: *const u16,
+    ) -> i32;
+}
+
+fn format_date_custom(format: &str, locale: Option<&str>) -> String {
+    use std::os::windows::ffi::OsStrExt;
+
+    let now = chrono::Local::now();
+    let hour = now.format("%H").to_string();
+    let min = now.format("%M").to_string();
+    let sec = now.format("%S").to_string();
+
+    let norm_format = format
+        .replace("YYYY", "yyyy")
+        .replace("DD", "dd")
+        .replace("HH", &format!("'{}'", hour))
+        .replace("mm", &format!("'{}'", min))
+        .replace("ss", &format!("'{}'", sec));
+
+    let format_wide: Vec<u16> = std::ffi::OsStr::new(&norm_format)
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+
+    let locale_wide: Option<Vec<u16>> = locale.map(|loc| {
+        std::ffi::OsStr::new(loc.trim())
+            .encode_wide()
+            .chain(Some(0))
+            .collect()
+    });
+
+    let locale_ptr = match locale_wide.as_ref() {
+        Some(w) => w.as_ptr(),
+        None => std::ptr::null(), // LOCALE_NAME_USER_DEFAULT
+    };
+
+    let mut buf = [0u16; 256];
+    let len = unsafe {
+        GetDateFormatEx(
+            locale_ptr,
+            0,
+            std::ptr::null(),
+            format_wide.as_ptr(),
+            buf.as_mut_ptr(),
+            buf.len() as i32,
+            std::ptr::null(),
+        )
+    };
+
+    if len > 1 {
+        String::from_utf16_lossy(&buf[..(len as usize - 1)])
+    } else {
+        now.format("%d/%m/%Y").to_string()
+    }
+}
+
 pub fn resolve_template(
     template: &str,
     all_snippets: &HashMap<String, String>,
@@ -69,14 +134,35 @@ pub fn resolve_template(
         return template.to_string();
     }
     let now = chrono::Local::now();
-    let date_str = now.format("%Y-%m-%d").to_string();
+    let date_str = now.format("%d/%m/%Y").to_string();
     let time_str = now.format("%H:%M").to_string();
-    let datetime_str = now.format("%Y-%m-%d %H:%M").to_string();
+    let datetime_str = now.format("%d/%m/%Y %H:%M").to_string();
 
     let mut result = template
         .replace("{{date}}", &date_str)
         .replace("{{time}}", &time_str)
         .replace("{{datetime}}", &datetime_str);
+
+    // Resolve dynamic date formats: {{date:FORMAT}} and {{date:FORMAT | LOCALE}}
+    while let Some(start_pos) = result.find("{{date:") {
+        if let Some(end_offset) = result[start_pos..].find("}}") {
+            let full_match = &result[start_pos..start_pos + end_offset + 2];
+            let inner = full_match[7..full_match.len() - 2].trim();
+
+            let (format_part, locale_part) = if let Some(pipe_idx) = inner.find('|') {
+                let fmt = inner[..pipe_idx].trim();
+                let loc = inner[pipe_idx + 1..].trim();
+                (fmt, Some(loc))
+            } else {
+                (inner, None)
+            };
+
+            let replacement = format_date_custom(format_part, locale_part);
+            result = result.replacen(full_match, &replacement, 1);
+        } else {
+            break;
+        }
+    }
 
     for (sc, val) in all_snippets {
         let pattern = format!("{{{{{}}}}}", sc);

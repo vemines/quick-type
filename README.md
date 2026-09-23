@@ -5,7 +5,12 @@
 </p>
 
 <p align="center">
-  <b>Phần mềm gõ tắt và thay thế văn bản thông minh, siêu nhẹ, hiện đại dành cho Windows.</b>
+  <b>A modern, smart text expansion and snippet utility for Windows.</b>
+</p>
+
+<p align="center">
+  <a href="README.md"><b>English</b></a> •
+  <a href="README.vi.md"><b>Tiếng Việt</b></a>
 </p>
 
 <p align="center">
@@ -19,32 +24,29 @@
 
 ---
 
-## 🌟 Tính năng nổi bật
+## 🌟 Key Features
 
-- 🚀 **Gõ tắt siêu nhanh**:
-  - **Chế độ phím kích hoạt (Hotkey Mode)**: Nhấn phím kích hoạt (mặc định phím \`\`\` ) sau khi gõ từ tắt để mở rộng.
-  - **Tự động gõ nhanh (Auto Replace)**: Tự động nhận diện và thay thế ngay lập tức khi gõ xong từ tắt hoặc gõ phím cách/dấu câu, không cần bấm thêm phím kích hoạt.
-- 📁 **Quản lý đa môi trường (Environments)**:
-  - Phân chia nhóm từ tắt theo môi trường: *Công việc, Học tập, Lập trình, Chăm sóc khách hàng...*
-  - Ngăn ngừa và cảnh báo trùng lặp từ tắt thông minh.
-- 🗂️ **Tích hợp System Tray tiện dụng**:
-  - Chạy ẩn mượt mà dưới khay hệ thống, thu nhỏ/ẩn cửa sổ khi đóng.
-  - Menu chuột phải có **Submenu chuyển đổi nhanh môi trường** (hiển thị dấu tick môi trường đang kích hoạt, đồng bộ 2 chiều với giao diện).
-  - Tạm dừng / Tiếp tục gõ tắt trực tiếp từ tray.
-  - Tự động phục hồi icon tray khi Windows Explorer khởi động lại.
-- 🕒 **Placeholder động & Mẫu lồng nhau**:
-  - Hỗ trợ biến động: `{{date}}`, `{{time}}`, `{{datetime}}`.
-  - Hỗ trợ lồng từ tắt trong từ tắt (nested snippets) lên tới 5 tầng.
-- 📥 **Nhập / Xuất dữ liệu linh hoạt**:
-  - Sao lưu và phục hồi cấu hình đầy đủ dạng file JSON.
-  - Hỗ trợ nhập danh sách từ tắt có sẵn từ file text của **UniKey**.
-- 🛡️ **Tùy chọn bản build Admin / Thường**:
-  - Bản thường: Chạy với quyền người dùng tiêu chuẩn, không hiện popup UAC.
-  - Bản Administrator: Tích hợp manifest chạy quyền Admin để gõ tắt trên mọi cửa sổ hệ thống (Terminal, phần mềm kế toán, VS Code Run as Admin...).
+- 🚀 **Fast Text Expansion**:
+  - **Hotkey Mode**: Press the trigger key (default: <kbd>`</kbd> ).
+  - **Auto Replace Mode**: Automatically detects and expands snippets immediately once typed.
+- 📁 **Multi-Environment Management**:
+  - Organize snippets by environments: *Work, Personal, ...*
+- 🕒 **Datetime Variables & Nested Templates**:
+  - **Default datetime variables**: `{{date}}` (DD/MM/YYYY), `{{time}}` (HH:mm), `{{datetime}}` (DD/MM/YYYY HH:mm).
+  - **Custom date format (`{{date:FORMAT}}`)**:
+    - `{{date:dddd}}`: Automatically formats Day of the week in user's OS system locale (`Wednesday`, `Thứ Tư`, `Mercredi`, `星期三`...).
+    - `{{date:DD/MM/YYYY}}`, `{{date:YYYY}}`...
+    - Explicit language overrides: `{{date:dddd | fr}}` (French), `{{date:dddd | en}}` (English), `{{date:dddd | vi}}` (Vietnamese)...
+  - **Nested Snippets (up to 5 levels)**: Reuse child snippets inside parent snippets (e.g. `{{snippet_name}}`). Automatically stops at level 5 to prevent infinite loops.
+- 📥 **Import / Export**:
+  - Full backup and restore using JSON files.
+- 🛡️ **Admin / Standard Build Options**:
+  - **Standard Build**: Run with standard user privileges.
+  - **Administrator Build**: Run with Administrator privileges applied across all applications.
 
 ---
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide Icons.
 - **Backend / Core**: Rust, Tauri v2.
@@ -52,43 +54,49 @@
 
 ---
 
-## 💻 Hướng dẫn cài đặt & Chạy mã nguồn
+## 💻 Getting Started & Development
 
-### Yêu cầu môi trường
-- [Node.js](https://nodejs.org/) (khuyến nghị phiên bản 18+ hoặc LTS).
-- [Rust & Cargo](https://www.rust-lang.org/tools/install) (khuyến nghị 1.77.2+).
-- Cài đặt Visual Studio C++ Build Tools (cho môi trường Windows).
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18+ or LTS recommended).
+- [Rust & Cargo](https://www.rust-lang.org/tools/install) (1.77.2+ recommended).
+- Visual Studio C++ Build Tools (for Windows).
 
-### Cài đặt dependencies
+### Install dependencies
 ```bash
 npm install
 ```
 
-### Chạy chế độ phát triển (Development)
+### Run in Development Mode
 ```bash
 npm run tauri:dev
 ```
 
 ---
 
-## 📦 Hướng dẫn đóng gói (Build EXE)
+## 📦 Packaging (Build EXE)
 
-Dự án hỗ trợ 2 chế độ đóng gói trực tiếp ra file `.exe` độc lập (nằm trong thư mục `src-tauri/target/release/QuickType.exe`):
+The project supports 2 packaging modes that compile directly into standalone `.exe` files (located in `src-tauri/target/release/QuickType.exe`):
 
-### 1. Build bản thường (Standard / Non-Admin)
-Không yêu cầu quyền Administrator khi mở ứng dụng:
+### 1. Build Standard Version (Non-Admin)
+Does not require Administrator privileges when opening the app:
 ```bash
 npm run build:exe
 ```
 
-### 2. Build bản Administrator (Elevated)
-Tự động kích hoạt quyền Admin khi mở (vượt quyền UAC để gõ tắt trên các ứng dụng elevated):
+### 2. Build Administrator Version
+Runs with Administrator privileges when opened:
 ```bash
 npm run build:admin
 ```
 
 ---
 
-## 📄 Giấy phép
+## 📄 License
 
-Dự án được phân phối dưới giấy phép [MIT](LICENSE).
+This project is licensed under the [MIT](LICENSE) License.
+
+---
+
+<div align="center">
+  <sub>Crafted with passion 💖 by <a href="https://github.com/vemines">VeMines</a></sub>
+</div>

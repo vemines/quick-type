@@ -67,7 +67,13 @@ export const SnippetModal: React.FC = () => {
   }, [snippets, editingSnippet]);
 
   // Examples generator
-  const todayDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const todayDate = useMemo(() => {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }, []);
   const currentTime = useMemo(() => new Date().toTimeString().slice(0, 5), []);
   const currentDateTime = useMemo(() => `${todayDate} ${currentTime}`, [todayDate, currentTime]);
 

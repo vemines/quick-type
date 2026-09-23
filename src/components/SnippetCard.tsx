@@ -38,16 +38,16 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
 
   // Parse and highlight dynamic variables (both built-in and user-defined {{shortcut}})
   const parsedContent = useMemo(() => {
-    const parts = snippet.content.split(/(\{\{[a-zA-Z0-9_.-]+\}\})/g);
+    const parts = snippet.content.split(/(\{\{[^}]+\}\})/g);
     return parts.map((part, index) => {
-      if (part === '{{date}}') {
+      if (part === '{{date}}' || part.startsWith('{{date:')) {
         return (
           <span
             key={index}
             className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40"
           >
             <Calendar className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            date
+            {part === '{{date}}' ? 'date' : part.slice(2, -2)}
           </span>
         );
       }
