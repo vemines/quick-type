@@ -72,5 +72,13 @@
   "toastImportSuccess": "Nhập dữ liệu thành công!",
   "toastImportError": "Lỗi khi đọc file dữ liệu!",
   "searchNoResultsTitle": "Không tìm thấy từ viết tắt nào",
-  "searchNoResultsDesc": "Không có kết quả nào khớp với \"{query}\". Thử tìm kiếm với từ khóa khác."
+  "searchNoResultsDesc": "Không có kết quả nào khớp với \"{query}\". Thử tìm kiếm với từ khóa khác.",
+  "envActive": "Đang chọn",
+  "envSelect": "Chọn",
+  "deleteEnvModalTitle": "Xác nhận xóa nhóm",
+  "deleteEnvConfirmQuestion": "Bạn có chắc muốn xóa nhóm \"{name}\" không?",
+  "deleteEnvWarningCount": "Toàn bộ {count} từ viết tắt bên trong sẽ bị xóa vĩnh viễn.",
+  "confirmDelete": "Xác nhận xóa",
+  "clickToChangeKey": "Nhấp để đổi phím",
+  "toastSavedConflictDisabled": "Đã lưu từ tắt (tự động tắt kích hoạt do trùng phím với từ đang bật)"
 }

@@ -28,7 +28,7 @@ export const SnippetList: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('searchPlaceholder', settings.language)}
-            className="w-full pl-10 pr-16 py-2 text-sm bg-white dark:bg-[#182234] text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500 shadow-xs transition-colors"
+            className="w-full pl-10 pr-16 py-2 text-sm bg-white dark:bg-[#182234] text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-md border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500 shadow-xs transition-colors"
           />
           {searchQuery && (
             <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -66,7 +66,7 @@ export const SnippetList: React.FC = () => {
           {!searchQuery && (
             <button
               onClick={openAddSnippetModal}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-sm font-semibold shadow-sm shadow-sky-600/20 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-sm font-semibold shadow-sm shadow-sky-600/20 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{t('addSnippet', settings.language)}</span>

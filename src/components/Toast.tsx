@@ -12,7 +12,7 @@ export const ToastContainer: React.FC = () => {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-md transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${
+          className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-2.5 rounded-md border shadow-lg backdrop-blur-md transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${
             toast.type === 'error'
               ? 'bg-rose-50/90 dark:bg-rose-950/80 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
               : toast.type === 'info'
@@ -32,7 +32,7 @@ export const ToastContainer: React.FC = () => {
           </div>
           <button
             onClick={() => dismissToast(toast.id)}
-            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1"
+            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1 rounded-md"
           >
             <X className="w-3.5 h-3.5" />
           </button>

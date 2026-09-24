@@ -236,17 +236,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return activeEnvironment.snippets || [];
   }, [activeEnvironment]);
 
-  // Toast Helpers
+  // Toast Helpers (Single toast at a time)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
+    setToasts([{ id, message, type }]);
+    toastTimerRef.current = setTimeout(() => {
+      setToasts([]);
+    }, 2600);
   }, []);
 
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+  const dismissToast = useCallback((_id?: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToasts([]);
   }, []);
 
   const environmentsRef = useRef(environments);
@@ -414,12 +422,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
 
       if (conflictDetected) {
-        showToast(
-          settings.language === 'vi'
-            ? 'Đã lưu từ tắt (tự động tắt kích hoạt do trùng phím với từ đang bật)'
-            : 'Saved shortcut (disabled to prevent collision with active shortcut)',
-          'info'
-        );
+        showToast(t('toastSavedConflictDisabled', settings.language), 'info');
       } else {
         showToast(t('toastSaved', settings.language), 'success');
       }

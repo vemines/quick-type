@@ -105,7 +105,7 @@ export const SettingsModal: React.FC = () => {
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-[#0c1220] border border-sky-200 dark:border-sky-500/50 flex items-center justify-center text-sky-600 dark:text-sky-400">
+            <div className="w-8 h-8 rounded-md bg-sky-50 dark:bg-[#0c1220] border border-sky-200 dark:border-sky-500/50 flex items-center justify-center text-sky-600 dark:text-sky-400">
               <SettingsIcon className="w-4 h-4" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -114,7 +114,7 @@ export const SettingsModal: React.FC = () => {
           </div>
           <button
             onClick={closeSettingsModal}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -131,7 +131,7 @@ export const SettingsModal: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Theme Selector */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <div className="p-3.5 rounded-md bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div>
                   <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     {t('themeLabel', settings.language)}
@@ -141,7 +141,7 @@ export const SettingsModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 bg-white dark:bg-[#182234] p-1 rounded-lg border border-slate-300 dark:border-slate-600">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#182234] p-1 rounded-md border border-slate-300 dark:border-slate-600">
                   <button
                     type="button"
                     onClick={() => setTheme('light')}
@@ -170,7 +170,7 @@ export const SettingsModal: React.FC = () => {
               </div>
 
               {/* Language Selector Dropdown */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between relative" ref={langDropdownRef}>
+              <div className="p-3.5 rounded-md bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between relative" ref={langDropdownRef}>
                 <div>
                   <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     {t('languageLabel', settings.language)}
@@ -184,7 +184,7 @@ export const SettingsModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsLangDropdownOpen((prev) => !prev)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-[#182234] hover:bg-slate-100 dark:hover:bg-[#1d2a40] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-600 shadow-2xs transition-all cursor-pointer text-xs font-medium"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white dark:bg-[#182234] hover:bg-slate-100 dark:hover:bg-[#1d2a40] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-600 shadow-2xs transition-all cursor-pointer text-xs font-medium"
                   >
                     <span>{SUPPORTED_LANGUAGES.find((l) => l.code === settings.language)?.label || 'Tiếng Việt'}</span>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
@@ -192,7 +192,7 @@ export const SettingsModal: React.FC = () => {
 
                   {/* Dropdown Menu */}
                   {isLangDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 w-36 bg-white dark:bg-[#182234] border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-full mt-1.5 w-36 bg-white dark:bg-[#182234] border border-slate-200 dark:border-slate-600 rounded-md shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-150">
                       {SUPPORTED_LANGUAGES.map((lang) => {
                         const isSelected = settings.language === lang.code;
                         return (
@@ -229,7 +229,7 @@ export const SettingsModal: React.FC = () => {
             </h4>
 
             {/* Hotkey Trigger Input (Left-aligned compact wrapper with dialog bg color for high contrast) */}
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="p-3.5 rounded-md bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 space-y-3">
               <div>
                 <div className="text-sm font-semibold text-slate-900 dark:text-white">
                   {t('triggerHotkeyLabel', settings.language)}
@@ -246,12 +246,12 @@ export const SettingsModal: React.FC = () => {
                     setIsRecordingHotkey(true);
                     hotkeyInputRef.current?.focus();
                   }}
-                  className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer select-none shadow-2xs ${
+                  className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-md border transition-all duration-150 cursor-pointer select-none shadow-2xs ${
                     isRecordingHotkey
                       ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 ring-2 ring-sky-500/30 text-sky-600 dark:text-sky-400'
                       : 'bg-white dark:bg-[#182234] border-slate-300 dark:border-slate-600 hover:border-sky-500 dark:hover:border-sky-400 hover:shadow-xs text-slate-900 dark:text-white'
                   }`}
-                  title={settings.language === 'vi' ? 'Nhấp để đổi phím' : 'Click to change key'}
+                  title={t('clickToChangeKey', settings.language)}
                 >
                   <input
                     ref={hotkeyInputRef}
@@ -280,7 +280,7 @@ export const SettingsModal: React.FC = () => {
             </div>
 
             {/* Auto-replace Toggle */}
-            <label className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
+            <label className="p-3.5 rounded-md bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
               <div className="pr-3">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white">
                   {t('autoReplaceLabel', settings.language)}
@@ -310,7 +310,7 @@ export const SettingsModal: React.FC = () => {
             </h4>
 
             <div className="space-y-2">
-              <label className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
+              <label className="p-3.5 rounded-md bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
                 <div className="pr-3">
                   <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     {t('runInBackground', settings.language)}
@@ -330,7 +330,7 @@ export const SettingsModal: React.FC = () => {
                 </div>
               </label>
 
-              <label className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
+              <label className="p-3.5 rounded-md bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
                 <div className="pr-3">
                   <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     {t('startWithWindows', settings.language)}
@@ -364,9 +364,9 @@ export const SettingsModal: React.FC = () => {
               <button
                 type="button"
                 onClick={exportJsonConfig}
-                className="h-full flex items-start gap-2.5 p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 text-left transition-colors cursor-pointer"
+                className="h-full flex items-start gap-2.5 p-3.5 rounded-md bg-slate-50 hover:bg-slate-100 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 text-left transition-colors cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-md bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center shrink-0">
                   <Download className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -391,9 +391,9 @@ export const SettingsModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => jsonFileInputRef.current?.click()}
-                  className="w-full h-full flex items-start gap-2.5 p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 text-left transition-colors cursor-pointer"
+                  className="w-full h-full flex items-start gap-2.5 p-3.5 rounded-md bg-slate-50 hover:bg-slate-100 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 text-left transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
                     <Upload className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">

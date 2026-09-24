@@ -113,7 +113,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
         <div className="flex items-center justify-between gap-2">
           {/* Shortcut Title Pill */}
           <div className="flex items-center gap-2">
-            <span className="font-mono text-base font-bold px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-[#0c1220] text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/50 shadow-xs">
+            <span className="font-mono text-base font-bold px-2.5 py-1 rounded-md bg-sky-50 dark:bg-[#0c1220] text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/50 shadow-xs">
               {snippet.shortcut}
             </span>
 
@@ -141,7 +141,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
 
       {/* Replaced Content Box (High Contrast) */}
       <div className="p-4 flex-1">
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 font-mono text-xs sm:text-sm font-normal whitespace-pre-wrap break-all max-h-36 overflow-y-auto custom-scrollbar shadow-inner">
+        <div className="p-3.5 rounded-md bg-slate-50 dark:bg-[#0c1220] border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 font-mono text-xs sm:text-sm font-normal whitespace-pre-wrap break-all max-h-36 overflow-y-auto custom-scrollbar shadow-inner">
           {parsedContent}
         </div>
       </div>
@@ -152,10 +152,10 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
         <button
           onClick={handleCopy}
           title={t('copy', settings.language)}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#182234] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white dark:bg-[#182234] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Clipboard className="w-3.5 h-3.5" />}
-          <span>{copied ? (settings.language === 'vi' ? 'Đã chép' : 'Copied') : t('copy', settings.language)}</span>
+          <span>{copied ? t('copied', settings.language) : t('copy', settings.language)}</span>
         </button>
 
         {/* Right Actions: Edit, Duplicate, Delete */}
@@ -164,7 +164,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
           <button
             onClick={() => openEditSnippetModal(snippet)}
             title={t('edit', settings.language)}
-            className="p-1.5 rounded-lg bg-white dark:bg-[#182234] hover:bg-sky-50 dark:hover:bg-sky-950/60 text-slate-700 hover:text-sky-600 dark:text-slate-200 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md bg-white dark:bg-[#182234] hover:bg-sky-50 dark:hover:bg-sky-950/60 text-slate-700 hover:text-sky-600 dark:text-slate-200 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
@@ -173,7 +173,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
           <button
             onClick={() => duplicateSnippet(snippet.id)}
             title={t('duplicate', settings.language)}
-            className="p-1.5 rounded-lg bg-white dark:bg-[#182234] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md bg-white dark:bg-[#182234] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
@@ -182,7 +182,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
           <button
             onClick={() => deleteSnippet(snippet.id)}
             title={t('delete', settings.language)}
-            className="p-1.5 rounded-lg bg-white dark:bg-[#182234] hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-700 hover:text-rose-600 dark:text-slate-200 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md bg-white dark:bg-[#182234] hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-700 hover:text-rose-600 dark:text-slate-200 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-600 transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
