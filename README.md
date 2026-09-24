@@ -27,22 +27,60 @@
 ## 🌟 Key Features
 
 - 🚀 **Fast Text Expansion**:
-  - **Hotkey Mode**: Press the trigger key (default: <kbd>`</kbd> ).
-  - **Auto Replace Mode**: Automatically detects and expands snippets immediately once typed.
-- 📁 **Multi-Environment Management**:
-  - Organize snippets by environments: *Work, Personal, ...*
-- 🕒 **Datetime Variables & Nested Templates**:
-  - **Default datetime variables**: `{{date}}` (DD/MM/YYYY), `{{time}}` (HH:mm), `{{datetime}}` (DD/MM/YYYY HH:mm).
-  - **Custom date format (`{{date:FORMAT}}`)**:
-    - `{{date:dddd}}`: Automatically formats Day of the week in user's OS system locale (`Wednesday`, `Thứ Tư`, `Mercredi`, `星期三`...).
-    - `{{date:DD/MM/YYYY}}`, `{{date:YYYY}}`...
-    - Explicit language overrides: `{{date:dddd | fr}}` (French), `{{date:dddd | en}}` (English), `{{date:dddd | vi}}` (Vietnamese)...
-  - **Nested Snippets (up to 5 levels)**: Reuse child snippets inside parent snippets (e.g. `{{snippet_name}}`). Automatically stops at level 5 to prevent infinite loops.
+  - **Hotkey Mode**: Press the trigger hotkey (default: <kbd>`</kbd>).
+  - **Auto Replace Mode**: Automatically detects and replaces keywords immediately as you type.
+- 📁 **Multi-Group & Environment Management**:
+  - Organize snippets by groups (*Work, Personal, Customer Support...*).
+  - Click to switch active group directly within Environment Manager or from the system tray menu.
+  - Safe group deletion with custom confirmation modals displaying affected shortcut counts.
+- 🕒 **Dynamic Variables & Nested Templates**:
+  - **System Variables**: Quick insertion of `{{date}}`, `{{time}}`, `{{datetime}}`, and `{{date:dddd}}` via the built-in variable dropdown.
+  - **Custom Formatting (`{{date:FORMAT}}`)**: Supports Windows OS date formatting patterns and time insertion.
+  - **Language Overrides (`{{date:FORMAT | LOCALE}}`)**: Force specific language locales regardless of OS defaults (e.g. `{{date:dddd | en}}` -> `Thursday`).
+  - **Nested Snippets (up to 5 levels)**: Reuse child snippets inside parent snippets (e.g. `{{phone}}`). Automatically protected against recursion and circular references.
 - 📥 **Import / Export**:
-  - Full backup and restore using JSON files.
-- 🛡️ **Admin / Standard Build Options**:
-  - **Standard Build**: Run with standard user privileges.
-  - **Administrator Build**: Run with Administrator privileges applied across all applications.
+  - Full backup and restore using clean JSON files.
+- 🛡️ **Dual Edition Architecture**:
+  - **Standard Edition**: Portable, run immediately without Administrator privileges.
+  - **Administrator Edition**: Run elevated with UAC manifest to expand text across all applications (elevated command prompts, accounting software, IDEs running as Admin).
+
+---
+
+## 🕒 Variable Reference Table
+
+| Syntax | Description | Example Output |
+| :--- | :--- | :--- |
+| `{{date}}` | Current date (default format) | `24/09/2026` |
+| `{{time}}` | Current time (24h format) | `08:30` |
+| `{{datetime}}` | Combined date and time | `24/09/2026 08:30` |
+| `{{date:dddd}}` | Full day of the week (system language) | `Thursday` / `Thứ Năm` |
+| `{{date:ddd}}` | Abbreviated day of the week | `Thu` / `T5` |
+| `{{date:dd}}` | Day of the month (2 digits) | `24` |
+| `{{date:d}}` | Day of the month (1-2 digits) | `24` |
+| `{{date:MM}}` | Month (2 digits) | `09` |
+| `{{date:M}}` | Month (1-2 digits) | `9` |
+| `{{date:MMM}}` | Abbreviated month name | `Sep` / `Thg 9` |
+| `{{date:MMMM}}` | Full month name | `September` / `Tháng 9` |
+| `{{date:yyyy}}` | 4-digit year | `2026` |
+| `{{date:yy}}` | 2-digit year | `26` |
+| `{{date:d/M/yyyy}}` | Compact date (no leading zeros) | `24/9/2026` |
+| `{{date:yyyyMMdd}}` | Continuous numeric date (filenames, invoices) | `20260924` |
+| `{{date:HH:mm:ss}}` | Time with seconds | `14:30:45` |
+| `{{date:dd/MM/yyyy HH:mm:ss}}` | Full date & time with seconds | `24/09/2026 14:30:45` |
+| `{{date:dddd | en}}` | Force English day of week | `Thursday` |
+| `{{date:MMMM d, yyyy | en}}` | US standard date format | `September 24, 2026` |
+| `{{shortcut}}` | Nested custom snippet from active group | *(Snippet content)* |
+
+---
+
+## 🛡️ Edition Comparison (Standard vs Admin)
+
+| Feature | Standard Edition (`QuickType.exe`) | Administrator Edition (`QuickType_admin.exe`) |
+| :--- | :--- | :--- |
+| **Admin Rights** | **Not required** | **Required** (elevated UAC) |
+| **App Support** | Standard apps (Word, Excel, Chrome, Zalo, VS Code...) | All apps including elevated windows (Admin CMD/PowerShell, accounting software, Task Manager) |
+| **User Experience** | Double-click and run instantly without UAC prompt | Prompts Windows UAC on launch |
+| **Recommended For** | General office work, restricted workplace computers | IT admins, accountants, power users |
 
 ---
 
@@ -73,18 +111,16 @@ npm run tauri:dev
 
 ---
 
-## 📦 Packaging (Build EXE)
+## 📦 Packaging (Build Standalone EXE)
 
-The project supports 2 packaging modes that compile directly into standalone `.exe` files (located in `src-tauri/target/release/QuickType.exe`):
+The project supports building standalone portable `.exe` binaries into `src-tauri/target/release/`:
 
-### 1. Build Standard Version (Non-Admin)
-Does not require Administrator privileges when opening the app:
+### 1. Build Standard Edition (Non-Admin)
 ```bash
 npm run build:exe
 ```
 
-### 2. Build Administrator Version
-Runs with Administrator privileges when opened:
+### 2. Build Administrator Edition
 ```bash
 npm run build:admin
 ```
