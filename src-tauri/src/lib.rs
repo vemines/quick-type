@@ -13,6 +13,7 @@ pub fn run() {
     if let Ok(mut state) = expander::EXPANDER_STATE.write() {
         state.trigger_hotkey = initial_data.settings.trigger_hotkey.clone();
         state.auto_replace = initial_data.settings.auto_replace;
+        state.language = initial_data.settings.language.clone();
 
         if let Some(active_env) = initial_data
             .environments

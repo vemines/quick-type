@@ -76,6 +76,11 @@ export const SnippetModal: React.FC = () => {
   }, []);
   const currentTime = useMemo(() => new Date().toTimeString().slice(0, 5), []);
   const currentDateTime = useMemo(() => `${todayDate} ${currentTime}`, [todayDate, currentTime]);
+  const currentDayOfWeek = useMemo(() => {
+    return new Intl.DateTimeFormat(settings.language === 'vi' ? 'vi-VN' : 'en-US', {
+      weekday: 'long',
+    }).format(new Date());
+  }, [settings.language]);
 
   if (!isSnippetModalOpen) return null;
 
@@ -206,6 +211,23 @@ export const SnippetModal: React.FC = () => {
                       </div>
                       <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#0c1220] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                         {todayDate}
+                      </span>
+                    </button>
+
+                    {/* Day of week (dddd) */}
+                    <button
+                      type="button"
+                      onClick={() => insertVariable('{{date:dddd}}')}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800/80 text-left transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {'{{date:dddd}}'}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#0c1220] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                        {currentDayOfWeek}
                       </span>
                     </button>
 

@@ -7,6 +7,7 @@ pub fn sync_expander_from_data(data: &AppData) {
     if let Ok(mut state) = EXPANDER_STATE.write() {
         state.trigger_hotkey = data.settings.trigger_hotkey.clone();
         state.auto_replace = data.settings.auto_replace;
+        state.language = data.settings.language.clone();
 
         let mut active_map = HashMap::new();
         let mut all_map = HashMap::new();

@@ -11,7 +11,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build --no-bundle",
     "build:exe": "tauri build --no-bundle",
-    "build:admin": "tauri build --no-bundle --features admin-manifest && node -e \"fs.copyFileSync('src-tauri/target/release/QuickType.exe', 'src-tauri/target/release/QuickType_admin.exe')\""
+    "build:admin": "tauri build --no-bundle --features admin-manifest && node scripts/post-build-admin.js"
   },
   "keywords": [
     "quick_type",

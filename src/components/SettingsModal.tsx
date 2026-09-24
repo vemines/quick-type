@@ -280,8 +280,8 @@ export const SettingsModal: React.FC = () => {
             </div>
 
             {/* Auto-replace Toggle */}
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-              <div>
+            <label className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
+              <div className="pr-3">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white">
                   {t('autoReplaceLabel', settings.language)}
                 </div>
@@ -290,7 +290,7 @@ export const SettingsModal: React.FC = () => {
                 </div>
               </div>
 
-              <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+              <div className="relative inline-flex items-center shrink-0">
                 <input
                   type="checkbox"
                   checked={settings.autoReplace}
@@ -298,8 +298,8 @@ export const SettingsModal: React.FC = () => {
                   className="sr-only peer"
                 />
                 <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
-              </label>
-            </div>
+              </div>
+            </label>
           </div>
 
           {/* Section 3: System & Startup */}
@@ -310,8 +310,8 @@ export const SettingsModal: React.FC = () => {
             </h4>
 
             <div className="space-y-2">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div>
+              <label className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
+                <div className="pr-3">
                   <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     {t('runInBackground', settings.language)}
                   </div>
@@ -319,7 +319,7 @@ export const SettingsModal: React.FC = () => {
                     {t('runInBackgroundDesc', settings.language)}
                   </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+                <div className="relative inline-flex items-center shrink-0">
                   <input
                     type="checkbox"
                     checked={settings.runInBackground}
@@ -327,11 +327,11 @@ export const SettingsModal: React.FC = () => {
                     className="sr-only peer"
                   />
                   <div className="w-8 h-4.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-sky-600"></div>
-                </label>
-              </div>
+                </div>
+              </label>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0c1220] border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div>
+              <label className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 dark:bg-[#0c1220] dark:hover:bg-[#121927] border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between cursor-pointer select-none transition-all duration-150">
+                <div className="pr-3">
                   <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     {t('startWithWindows', settings.language)}
                   </div>
@@ -339,7 +339,7 @@ export const SettingsModal: React.FC = () => {
                     {t('startWithWindowsDesc', settings.language)}
                   </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+                <div className="relative inline-flex items-center shrink-0">
                   <input
                     type="checkbox"
                     checked={settings.startWithWindows}
@@ -347,8 +347,8 @@ export const SettingsModal: React.FC = () => {
                     className="sr-only peer"
                   />
                   <div className="w-8 h-4.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-sky-600"></div>
-                </label>
-              </div>
+                </div>
+              </label>
             </div>
           </div>
 

@@ -40,42 +40,45 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({ snippet }) => {
   const parsedContent = useMemo(() => {
     const parts = snippet.content.split(/(\{\{[^}]+\}\})/g);
     return parts.map((part, index) => {
-      if (part === '{{date}}' || part.startsWith('{{date:')) {
-        return (
-          <span
-            key={index}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40"
-          >
-            <Calendar className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            {part === '{{date}}' ? 'date' : part.slice(2, -2)}
-          </span>
-        );
-      }
-      if (part === '{{time}}') {
-        return (
-          <span
-            key={index}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/40"
-          >
-            <Clock className="w-3 h-3 text-sky-600 dark:text-sky-400" />
-            time
-          </span>
-        );
-      }
-      if (part === '{{datetime}}') {
-        return (
-          <span
-            key={index}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-500/40"
-          >
-            <CalendarClock className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-            datetime
-          </span>
-        );
-      }
-      // Check for user-defined variable, e.g. {{phone}}
       if (part.startsWith('{{') && part.endsWith('}}')) {
-        const inner = part.slice(2, -2);
+        const inner = part.slice(2, -2).trim();
+        const lower = inner.toLowerCase();
+
+        if (lower === 'date' || lower.startsWith('date:')) {
+          return (
+            <span
+              key={index}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40"
+            >
+              <Calendar className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              {lower === 'date' ? 'date' : inner}
+            </span>
+          );
+        }
+        if (lower === 'time') {
+          return (
+            <span
+              key={index}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/40"
+            >
+              <Clock className="w-3 h-3 text-sky-600 dark:text-sky-400" />
+              time
+            </span>
+          );
+        }
+        if (lower === 'datetime') {
+          return (
+            <span
+              key={index}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-500/40"
+            >
+              <CalendarClock className="w-3 h-3 text-teal-600 dark:text-teal-400" />
+              datetime
+            </span>
+          );
+        }
+
+        // Custom user-defined variable (e.g. {{cccd}})
         return (
           <span
             key={index}

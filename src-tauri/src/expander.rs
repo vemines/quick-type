@@ -24,6 +24,7 @@ pub struct ExpanderState {
     pub enabled: bool,
     pub trigger_hotkey: String,
     pub auto_replace: bool,
+    pub language: String,
     pub active_snippets: HashMap<String, String>,
     pub all_snippets: HashMap<String, String>,
 }
@@ -34,6 +35,7 @@ impl ExpanderState {
             enabled: true,
             trigger_hotkey: "`".to_string(),
             auto_replace: false,
+            language: "vi".to_string(),
             active_snippets: HashMap::new(),
             all_snippets: HashMap::new(),
         }
@@ -55,6 +57,7 @@ pub struct ExpansionJob {
     pub backspaces: usize,
     pub raw_content: String,
     pub all_snippets: HashMap<String, String>,
+    pub language: String,
 }
 
 static INJECTOR_SENDER: once_cell::sync::Lazy<Mutex<Option<std::sync::mpsc::Sender<ExpansionJob>>>> =
@@ -73,7 +76,7 @@ extern "system" {
     ) -> i32;
 }
 
-fn format_date_custom(format: &str, locale: Option<&str>) -> String {
+fn format_date_custom(format: &str, locale: Option<&str>, default_lang: Option<&str>) -> String {
     use std::os::windows::ffi::OsStrExt;
 
     let now = chrono::Local::now();
@@ -82,7 +85,10 @@ fn format_date_custom(format: &str, locale: Option<&str>) -> String {
     let sec = now.format("%S").to_string();
 
     let norm_format = format
+        .trim()
         .replace("YYYY", "yyyy")
+        .replace("DDDD", "dddd")
+        .replace("DDD", "ddd")
         .replace("DD", "dd")
         .replace("HH", &format!("'{}'", hour))
         .replace("mm", &format!("'{}'", min))
@@ -93,8 +99,14 @@ fn format_date_custom(format: &str, locale: Option<&str>) -> String {
         .chain(Some(0))
         .collect();
 
-    let locale_wide: Option<Vec<u16>> = locale.map(|loc| {
-        std::ffi::OsStr::new(loc.trim())
+    // Determine target locale: explicit locale -> default app language -> None (Windows user default)
+    let target_locale = locale
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .or_else(|| default_lang.map(|s| s.trim()).filter(|s| !s.is_empty()));
+
+    let locale_wide: Option<Vec<u16>> = target_locale.map(|loc| {
+        std::ffi::OsStr::new(loc)
             .encode_wide()
             .chain(Some(0))
             .collect()
@@ -121,6 +133,22 @@ fn format_date_custom(format: &str, locale: Option<&str>) -> String {
     if len > 1 {
         String::from_utf16_lossy(&buf[..(len as usize - 1)])
     } else {
+        if locale_ptr != std::ptr::null() {
+            let len_fallback = unsafe {
+                GetDateFormatEx(
+                    std::ptr::null(),
+                    0,
+                    std::ptr::null(),
+                    format_wide.as_ptr(),
+                    buf.as_mut_ptr(),
+                    buf.len() as i32,
+                    std::ptr::null(),
+                )
+            };
+            if len_fallback > 1 {
+                return String::from_utf16_lossy(&buf[..(len_fallback as usize - 1)]);
+            }
+        }
         now.format("%d/%m/%Y").to_string()
     }
 }
@@ -128,6 +156,7 @@ fn format_date_custom(format: &str, locale: Option<&str>) -> String {
 pub fn resolve_template(
     template: &str,
     all_snippets: &HashMap<String, String>,
+    default_lang: Option<&str>,
     depth: usize,
 ) -> String {
     if depth > 5 {
@@ -138,36 +167,54 @@ pub fn resolve_template(
     let time_str = now.format("%H:%M").to_string();
     let datetime_str = now.format("%d/%m/%Y %H:%M").to_string();
 
-    let mut result = template
-        .replace("{{date}}", &date_str)
-        .replace("{{time}}", &time_str)
-        .replace("{{datetime}}", &datetime_str);
+    let mut result = template.to_string();
 
-    // Resolve dynamic date formats: {{date:FORMAT}} and {{date:FORMAT | LOCALE}}
-    while let Some(start_pos) = result.find("{{date:") {
-        if let Some(end_offset) = result[start_pos..].find("}}") {
-            let full_match = &result[start_pos..start_pos + end_offset + 2];
-            let inner = full_match[7..full_match.len() - 2].trim();
+    // 1. Resolve dynamic date/time variables: {{date}}, {{time}}, {{datetime}}, {{date:FORMAT}}, {{date:FORMAT | LOCALE}}
+    let mut scan_idx = 0;
+    while let Some(start) = result[scan_idx..].find("{{") {
+        let abs_start = scan_idx + start;
+        if let Some(end) = result[abs_start..].find("}}") {
+            let abs_end = abs_start + end + 2;
+            let token = &result[abs_start..abs_end];
+            let inner = token[2..token.len() - 2].trim();
+            let inner_lower = inner.to_lowercase();
 
-            let (format_part, locale_part) = if let Some(pipe_idx) = inner.find('|') {
-                let fmt = inner[..pipe_idx].trim();
-                let loc = inner[pipe_idx + 1..].trim();
-                (fmt, Some(loc))
+            let replacement = if inner_lower == "date" {
+                Some(date_str.clone())
+            } else if inner_lower == "time" {
+                Some(time_str.clone())
+            } else if inner_lower == "datetime" {
+                Some(datetime_str.clone())
+            } else if inner_lower.starts_with("date:") {
+                let after_colon = inner[5..].trim();
+                let (format_part, locale_part) = if let Some(pipe_idx) = after_colon.find('|') {
+                    let fmt = after_colon[..pipe_idx].trim();
+                    let loc = after_colon[pipe_idx + 1..].trim();
+                    (fmt, Some(loc))
+                } else {
+                    (after_colon, None)
+                };
+                Some(format_date_custom(format_part, locale_part, default_lang))
             } else {
-                (inner, None)
+                None
             };
 
-            let replacement = format_date_custom(format_part, locale_part);
-            result = result.replacen(full_match, &replacement, 1);
+            if let Some(rep) = replacement {
+                result.replace_range(abs_start..abs_end, &rep);
+                scan_idx = abs_start + rep.len();
+            } else {
+                scan_idx = abs_end;
+            }
         } else {
             break;
         }
     }
 
+    // 2. Resolve nested snippets {{shortcut}}
     for (sc, val) in all_snippets {
         let pattern = format!("{{{{{}}}}}", sc);
         if result.contains(&pattern) {
-            let expanded_child = resolve_template(val, all_snippets, depth + 1);
+            let expanded_child = resolve_template(val, all_snippets, default_lang, depth + 1);
             result = result.replace(&pattern, &expanded_child);
         }
     }
@@ -343,7 +390,7 @@ fn init_worker_thread() {
             IS_INJECTING.store(true, Ordering::SeqCst);
 
             // 1. Resolve template off the hook thread
-            let resolved_text = resolve_template(&job.raw_content, &job.all_snippets, 0);
+            let resolved_text = resolve_template(&job.raw_content, &job.all_snippets, Some(&job.language), 0);
 
             // 2. Allow active keypress from user to complete release
             thread::sleep(Duration::from_millis(25));
@@ -475,6 +522,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                                         backspaces,
                                         raw_content: content.clone(),
                                         all_snippets: state.all_snippets.clone(),
+                                        language: state.language.clone(),
                                     });
                                 }
                             }
@@ -522,6 +570,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                                         backspaces,
                                         raw_content: content,
                                         all_snippets: state.all_snippets.clone(),
+                                        language: state.language.clone(),
                                     });
                                 }
                             }
@@ -564,6 +613,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                                         backspaces,
                                         raw_content: content_with_delim,
                                         all_snippets: state.all_snippets.clone(),
+                                        language: state.language.clone(),
                                     });
                                 }
                             }
