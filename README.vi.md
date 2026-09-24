@@ -67,8 +67,8 @@
 | `{{date:yyyyMMdd}}` | Chuỗi số liền (đặt tên file, hóa đơn) | `20260924` |
 | `{{date:HH:mm:ss}}` | Giờ kèm giây | `14:30:45` |
 | `{{date:dd/MM/yyyy HH:mm:ss}}` | Ngày và giờ chi tiết đến giây | `24/09/2026 14:30:45` |
-| `{{date:dddd | en}}` | Thứ bằng tiếng Anh (`en`) | `Thursday` |
-| `{{date:MMMM d, yyyy | en}}` | Ngày tháng chuẩn tiếng Anh | `September 24, 2026` |
+| `{{date:dddd \| en}}` | Thứ bằng tiếng Anh (`en`) | `Thursday` |
+| `{{date:MMMM d, yyyy \| en}}` | Ngày tháng chuẩn tiếng Anh | `September 24, 2026` |
 | `{{từ_tắt}}` | Lồng từ tắt khác trong nhóm | *(Nội dung từ tắt)* |
 
 ---

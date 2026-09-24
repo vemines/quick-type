@@ -67,8 +67,8 @@
 | `{{date:yyyyMMdd}}` | Continuous numeric date (filenames, invoices) | `20260924` |
 | `{{date:HH:mm:ss}}` | Time with seconds | `14:30:45` |
 | `{{date:dd/MM/yyyy HH:mm:ss}}` | Full date & time with seconds | `24/09/2026 14:30:45` |
-| `{{date:dddd | en}}` | Force English day of week | `Thursday` |
-| `{{date:MMMM d, yyyy | en}}` | US standard date format | `September 24, 2026` |
+| `{{date:dddd \| en}}` | Force English day of week | `Thursday` |
+| `{{date:MMMM d, yyyy \| en}}` | US standard date format | `September 24, 2026` |
 | `{{shortcut}}` | Nested custom snippet from active group | *(Snippet content)* |
 
 ---
