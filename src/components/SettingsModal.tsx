@@ -51,7 +51,10 @@ export const SettingsModal: React.FC = () => {
   const handleJsonFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      await importJsonConfig(file);
+      const ok = await importJsonConfig(file);
+      if (ok) {
+        closeSettingsModal();
+      }
       if (jsonFileInputRef.current) jsonFileInputRef.current.value = '';
     }
   };

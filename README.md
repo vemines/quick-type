@@ -26,23 +26,26 @@
 
 ## 🌟 Key Features
 
-- 🚀 **Fast Text Expansion**:
+- 🚀 **High Performance & Ultra-Lightweight Binary (~3.1 MB)**:
+  - Optimized portable build using Rust `[profile.release]` (LTO + Strip symbols), weighing only ~3.05 MB.
   - **Hotkey Mode**: Press the trigger hotkey (default: <kbd>`</kbd>).
   - **Auto Replace Mode**: Automatically detects and replaces keywords immediately as you type.
-- 📁 **Multi-Group & Environment Management**:
-  - Organize snippets by groups (*Work, Personal, Customer Support...*).
-  - Click to switch active group directly within Environment Manager or from the system tray menu.
-  - Safe group deletion with custom confirmation modals displaying affected shortcut counts.
-- 🕒 **Dynamic Variables & Nested Templates**:
-  - **System Variables**: Quick insertion of `{{date}}`, `{{time}}`, `{{datetime}}`, and `{{date:dddd}}` via the built-in variable dropdown.
-  - **Custom Formatting (`{{date:FORMAT}}`)**: Supports Windows OS date formatting patterns and time insertion.
-  - **Language Overrides (`{{date:FORMAT | LOCALE}}`)**: Force specific language locales regardless of OS defaults (e.g. `{{date:dddd | en}}` -> `Thursday`).
-  - **Nested Snippets (up to 5 levels)**: Reuse child snippets inside parent snippets (e.g. `{{phone}}`). Automatically protected against recursion and circular references.
-- 📥 **Import / Export**:
-  - Full backup and restore using clean JSON files.
+  - **System Tray Toggle**: Single-click the lightning bolt icon ⚡ in the system tray to instantly show or hide the window.
+- 📁 **Environment Management & Cross-Group Snippet Transfer**:
+  - Organize snippets by environments (*Work, Personal, Customer Support, Development...*).
+  - **1-Click Switching**: Switch active environment directly from the system tray context menu.
+  - **Transfer Snippets (`[⇄ Transfer from other groups]`)**: Filter, search, and batch-copy snippets from any group into the active group with Expand Card previews and `[New]` / `[Conflict]` badges.
+- 🕒 **Dynamic Variables & Infinite Loop Protection (Cycle Detection)**:
+  - **Interactive Variable Menu ✨**: One-click insertion of `{{date}}`, `{{time}}`, `{{datetime}}`, `{{date:dddd}}`, or nested snippet variables without memorizing syntax.
+  - **Cycle Detection Engine**: Client-side DFS graph algorithm detects recursive reference loops (`/a → /b → /a`) in real-time, displays a visual path warning, and blocks saving. The Rust core engine incorporates `visited` set backtracking and a 5-level depth cap to permanently prevent thread hangs.
+  - **Shortcut Collision Warning**: Real-time detection of duplicate hotkeys in the same environment.
+- 📥 **Smart JSON Backup & Import Analysis**:
+  - Pre-import configuration analysis summarizing new groups, new snippets, and conflicts.
+  - **Merge**: Safely keeps existing data while adding new groups and snippets, with side-by-side Expand Card conflict resolution.
+  - **Replace**: Complete configuration overwrite with an alert modal detailing all groups and snippets to be deleted.
 - 🛡️ **Dual Edition Architecture**:
-  - **Standard Edition**: Portable, run immediately without Administrator privileges.
-  - **Administrator Edition**: Run elevated with UAC manifest to expand text across all applications (elevated command prompts, accounting software, IDEs running as Admin).
+  - **Standard Edition (`QuickType.exe`)**: Portable, runs immediately without Administrator privileges.
+  - **Administrator Edition (`QuickType_admin.exe`)**: Embedded UAC manifest to expand snippets across 100% of applications (Admin CMD/PowerShell, accounting software, IDEs running as Admin).
 
 ---
 
@@ -113,17 +116,16 @@ npm run tauri:dev
 
 ## 📦 Packaging (Build Standalone EXE)
 
-The project supports building standalone portable `.exe` binaries into `src-tauri/target/release/`:
+The project supports building both standalone portable `.exe` editions concurrently into `src-tauri/target/release/`:
 
-### 1. Build Standard Edition (Non-Admin)
 ```bash
-npm run build:exe
+npm run build:all
 ```
 
-### 2. Build Administrator Edition
-```bash
-npm run build:admin
-```
+The build pipeline automatically:
+1. Closes any running instances to prevent Windows binary file locks.
+2. Builds the Administrator edition with `admin-manifest` ➔ Generates `QuickType_admin.exe` (~3.05 MB).
+3. Builds the Standard edition ➔ Generates `QuickType.exe` (~3.05 MB).
 
 ---
 

@@ -10,8 +10,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build --no-bundle",
-    "build:exe": "tauri build --no-bundle",
-    "build:admin": "tauri build --no-bundle --features admin-manifest && node scripts/post-build-admin.js"
+    "build:all": "node scripts/build-all.js"
   },
   "keywords": [
     "quick_type",

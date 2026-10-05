@@ -29,20 +29,21 @@
 - 🚀 **Gõ tắt nhanh**:
   - **Chế độ phím kích hoạt (Hotkey Mode)**: Nhấn phím kích hoạt (mặc định phím <kbd>`</kbd>).
   - **Tự động gõ nhanh (Auto Replace)**: Tự động nhận diện và thay thế ngay lập tức khi gõ xong từ tắt.
-- 📁 **Quản lý đa nhóm / Môi trường (Environments)**:
-  - Phân chia nhóm từ tắt theo môi trường (*Công việc, Khách hàng, Cá nhân...*).
-  - Nhấp trực tiếp để chuyển đổi nhóm trong Quản lý nhóm hoặc từ menu khay hệ thống (System Tray).
-  - Hộp thoại xác nhận xóa nhóm an toàn kèm cảnh báo số lượng từ tắt sẽ bị xóa vĩnh viễn.
-- 🕒 **Biến Ngày Giờ & lồng nhau**:
-  - **Chèn biến nhanh**: Nút "Chèn biến" trực quan có sẵn các biến `{{date}}`, `{{time}}`, `{{datetime}}`, `{{date:dddd}}` và danh sách từ tắt trong nhóm.
-  - **Định dạng tùy biến (`{{date:FORMAT}}`)**: Hỗ trợ đầy đủ định dạng ngày giờ của Windows OS.
-  - **Ép ngôn ngữ hiển thị (`{{date:FORMAT | LOCALE}}`)**: Ép ngôn ngữ sang tiếng Anh, Pháp, Việt... bất kể cài đặt vùng của máy tính (ví dụ: `{{date:dddd | en}}` ➔ `Thursday`).
-  - **Lồng từ tắt con (tối đa 5 tầng)**: Tái sử dụng từ tắt con bên trong từ tắt cha (ví dụ `{{sdt}}`). Hệ thống tự động chặn ở tầng thứ 5 để chống vòng lặp vô tận.
-- 📥 **Nhập / Xuất dữ liệu**:
-  - Sao lưu và phục hồi cấu hình đầy đủ dưới dạng file JSON.
+- 📁 **Quản lý Môi trường & Lấy từ giữa các nhóm (Transfer Snippets)**:
+  - Phân tách môi trường làm việc (*Công việc, Khách hàng, Cá nhân, Lập trình...*).
+  - **Chuyển đổi 1-click**: Đổi nhanh nhóm hoạt động trực tiếp từ menu chuột phải khay hệ thống.
+  - **Lấy từ từ nhóm khác (`[⇄ Lấy từ từ nhóm khác]`)**: Lọc tìm kiếm và sao chép hàng loạt từ viết tắt từ các nhóm nguồn sang nhóm hiện tại với giao diện thẻ Expand Card xem trước nội dung, nhận diện nhãn `[Mới]` / `[Trùng phím]`.
+- 🕒 **Trình chèn biến động & Chống lặp vô tận (Cycle Detection)**:
+  - **Menu Chèn biến trực quan ✨**: Nhấp chọn trực tiếp ngày `{{date}}`, giờ `{{time}}`, thứ tiếng Việt `{{date:dddd}}` hoặc lồng các từ tắt con có sẵn trong nhóm mà không cần gõ cú pháp bằng tay.
+  - **Phát hiện vòng lặp vô tận (Cycle Detection)**: Thuật toán DFS đồ thị phát hiện chu trình lặp đệ quy ngay khi nhập liệu (`/a → /b → /a`), hiện cảnh báo đỏ trực quan và khóa nút Lưu. Lõi Rust engine tích hợp cơ chế `visited` backtracking chống treo luồng triệt để.
+  - **Cảnh báo trùng phím tắt**: Tự động phát hiện và cảnh báo khi phím tắt bị trùng trong cùng nhóm.
+- 📥 **Sao lưu & Nhập cấu hình thông minh (Smart JSON Import)**:
+  - Màn hình phân tích tệp cấu hình (Import Analysis) trước khi nạp.
+  - **Gộp dữ liệu (Merge)**: Giữ nguyên dữ liệu hiện có, bổ sung nhóm và từ mới. Giải quyết xung đột trùng phím bằng giao diện so sánh song song trực quan.
+  - **Ghi đè toàn bộ (Replace)**: Hộp cảnh báo đỏ liệt kê chi tiết danh sách nhóm và từ tắt sẽ bị xóa vĩnh viễn trước khi xác nhận.
 - 🛡️ **Hỗ trợ 2 phiên bản độc lập**:
-  - **Bản Thường**: File chạy ngay không cần cài đặt, không đòi hỏi quyền Administrator.
-  - **Bản Administrator**: Chạy với quyền Admin tối cao để gõ tắt trên 100% ứng dụng (cmd admin, phần mềm kế toán, IDEs...).
+  - **Bản Thường (`QuickType.exe`)**: File chạy ngay không cần cài đặt, không đòi hỏi quyền Admin.
+  - **Bản Administrator (`QuickType_admin.exe`)**: Nhúng UAC manifest để gõ tắt trên toàn bộ ứng dụng chạy quyền Admin.
 
 ---
 
@@ -115,17 +116,9 @@ npm run tauri:dev
 
 Dự án hỗ trợ đóng gói trực tiếp ra file `.exe` portable độc lập trong `src-tauri/target/release/`:
 
-### 1. Build bản thường (Standard / Non-Admin)
 ```bash
-npm run build:exe
+npm run build:all
 ```
-
-### 2. Build bản Administrator
-```bash
-npm run build:admin
-```
-
----
 
 ## 📄 Giấy phép
 

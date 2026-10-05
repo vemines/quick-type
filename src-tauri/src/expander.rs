@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -13,7 +13,7 @@ const CF_UNICODETEXT: u32 = 13;
 use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE};
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_BACK, VK_CONTROL,
+    GetAsyncKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_BACK, VK_CONTROL,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage,
@@ -58,6 +58,7 @@ pub struct ExpansionJob {
     pub raw_content: String,
     pub all_snippets: HashMap<String, String>,
     pub language: String,
+    pub trigger_shortcut: Option<String>,
 }
 
 static INJECTOR_SENDER: once_cell::sync::Lazy<Mutex<Option<std::sync::mpsc::Sender<ExpansionJob>>>> =
@@ -157,7 +158,22 @@ pub fn resolve_template(
     template: &str,
     all_snippets: &HashMap<String, String>,
     default_lang: Option<&str>,
+    trigger_shortcut: Option<&str>,
     depth: usize,
+) -> String {
+    let mut visited: HashSet<String> = HashSet::new();
+    if let Some(sc) = trigger_shortcut {
+        visited.insert(sc.to_lowercase());
+    }
+    resolve_template_inner(template, all_snippets, default_lang, depth, &mut visited)
+}
+
+fn resolve_template_inner(
+    template: &str,
+    all_snippets: &HashMap<String, String>,
+    default_lang: Option<&str>,
+    depth: usize,
+    visited: &mut HashSet<String>,
 ) -> String {
     if depth > 5 {
         return template.to_string();
@@ -169,7 +185,7 @@ pub fn resolve_template(
 
     let mut result = template.to_string();
 
-    // 1. Resolve dynamic date/time variables: {{date}}, {{time}}, {{datetime}}, {{date:FORMAT}}, {{date:FORMAT | LOCALE}}
+    // 1. Resolve dynamic date/time variables and nested snippets {{shortcut}} in a single robust pass
     let mut scan_idx = 0;
     while let Some(start) = result[scan_idx..].find("{{") {
         let abs_start = scan_idx + start;
@@ -179,7 +195,7 @@ pub fn resolve_template(
             let inner = token[2..token.len() - 2].trim();
             let inner_lower = inner.to_lowercase();
 
-            let replacement = if inner_lower == "date" {
+            let replacement: Option<String> = if inner_lower == "date" {
                 Some(date_str.clone())
             } else if inner_lower == "time" {
                 Some(time_str.clone())
@@ -195,6 +211,18 @@ pub fn resolve_template(
                     (after_colon, None)
                 };
                 Some(format_date_custom(format_part, locale_part, default_lang))
+            } else if let Some(child_val) = all_snippets.get(&inner_lower) {
+                // Nested snippet variable reference with cycle detection
+                if visited.contains(&inner_lower) {
+                    // Cycle detected! Do not expand recursive loop
+                    None
+                } else {
+                    visited.insert(inner_lower.clone());
+                    let expanded_child =
+                        resolve_template_inner(child_val, all_snippets, default_lang, depth + 1, visited);
+                    visited.remove(&inner_lower);
+                    Some(expanded_child)
+                }
             } else {
                 None
             };
@@ -207,15 +235,6 @@ pub fn resolve_template(
             }
         } else {
             break;
-        }
-    }
-
-    // 2. Resolve nested snippets {{shortcut}}
-    for (sc, val) in all_snippets {
-        let pattern = format!("{{{{{}}}}}", sc);
-        if result.contains(&pattern) {
-            let expanded_child = resolve_template(val, all_snippets, default_lang, depth + 1);
-            result = result.replace(&pattern, &expanded_child);
         }
     }
     result
@@ -390,7 +409,13 @@ fn init_worker_thread() {
             IS_INJECTING.store(true, Ordering::SeqCst);
 
             // 1. Resolve template off the hook thread
-            let resolved_text = resolve_template(&job.raw_content, &job.all_snippets, Some(&job.language), 0);
+            let resolved_text = resolve_template(
+                &job.raw_content,
+                &job.all_snippets,
+                Some(&job.language),
+                job.trigger_shortcut.as_deref(),
+                0,
+            );
 
             // 2. Allow active keypress from user to complete release
             thread::sleep(Duration::from_millis(25));
@@ -467,25 +492,45 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 return CallNextHookEx(0 as HHOOK, n_code, w_param, l_param);
             }
 
-            // Convert key to char if simple printable
+            let is_shift = (GetAsyncKeyState(0x10) as u16 & 0x8000) != 0;
+
+            // Convert key to char if simple printable, supporting Shift key for characters like '_'
             let char_typed = match vk {
                 0x0D => Some('\n'), // Enter
                 0x09 => Some('\t'), // Tab
                 0x20 => Some(' '),
-                0x30..=0x39 => Some((vk as u8) as char),
+                0x30..=0x39 => {
+                    if is_shift {
+                        match vk {
+                            0x31 => Some('!'),
+                            0x32 => Some('@'),
+                            0x33 => Some('#'),
+                            0x34 => Some('$'),
+                            0x35 => Some('%'),
+                            0x36 => Some('^'),
+                            0x37 => Some('&'),
+                            0x38 => Some('*'),
+                            0x39 => Some('('),
+                            0x30 => Some(')'),
+                            _ => None,
+                        }
+                    } else {
+                        Some((vk as u8) as char)
+                    }
+                }
                 0x41..=0x5A => Some(((vk as u8).to_ascii_lowercase()) as char),
                 0x60..=0x69 => Some(((vk - 0x60 + 0x30) as u8) as char),
-                0xC0 => Some('`'), // Tilde/Backtick key
-                0xBD => Some('-'),
-                0xBB => Some('='),
-                0xDB => Some('['),
-                0xDD => Some(']'),
-                0xDC => Some('\\'),
-                0xBA => Some(';'),
-                0xDE => Some('\''),
-                0xBC => Some(','),
-                0xBE => Some('.'),
-                0xBF => Some('/'),
+                0xC0 => if is_shift { Some('~') } else { Some('`') },
+                0xBD => if is_shift { Some('_') } else { Some('-') },
+                0xBB => if is_shift { Some('+') } else { Some('=') },
+                0xDB => if is_shift { Some('{') } else { Some('[') },
+                0xDD => if is_shift { Some('}') } else { Some(']') },
+                0xDC => if is_shift { Some('|') } else { Some('\\') },
+                0xBA => if is_shift { Some(':') } else { Some(';') },
+                0xDE => if is_shift { Some('"') } else { Some('\'') },
+                0xBC => if is_shift { Some('<') } else { Some(',') },
+                0xBE => if is_shift { Some('>') } else { Some('.') },
+                0xBF => if is_shift { Some('?') } else { Some('/') },
                 _ => None,
             };
 
@@ -523,6 +568,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                                         raw_content: content.clone(),
                                         all_snippets: state.all_snippets.clone(),
                                         language: state.language.clone(),
+                                        trigger_shortcut: Some(shortcut.clone()),
                                     });
                                 }
                             }
@@ -571,6 +617,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                                         raw_content: content,
                                         all_snippets: state.all_snippets.clone(),
                                         language: state.language.clone(),
+                                        trigger_shortcut: Some(shortcut.clone()),
                                     });
                                 }
                             }
@@ -614,6 +661,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                                         raw_content: content_with_delim,
                                         all_snippets: state.all_snippets.clone(),
                                         language: state.language.clone(),
+                                        trigger_shortcut: Some(shortcut.clone()),
                                     });
                                 }
                             }

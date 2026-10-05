@@ -6,11 +6,7 @@ pub struct Snippet {
     pub id: String,
     pub shortcut: String,
     pub content: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
     pub is_enabled: bool,
-    pub created_at: i64,
-    pub updated_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,8 +14,6 @@ pub struct Snippet {
 pub struct Environment {
     pub id: String,
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_default: Option<bool>,
     pub snippets: Vec<Snippet>,
@@ -62,41 +56,30 @@ pub struct AppData {
 
 impl Default for AppData {
     fn default() -> Self {
-        let now = chrono::Utc::now().timestamp_millis();
         let sample_snippets = vec![
             Snippet {
                 id: "sample-1".to_string(),
                 shortcut: "cccd".to_string(),
                 content: "012345678901".to_string(),
-                description: None,
                 is_enabled: true,
-                created_at: now,
-                updated_at: now,
             },
             Snippet {
                 id: "sample-2".to_string(),
                 shortcut: "eml".to_string(),
                 content: "example@gmail.com".to_string(),
-                description: None,
                 is_enabled: true,
-                created_at: now,
-                updated_at: now,
             },
             Snippet {
                 id: "sample-3".to_string(),
                 shortcut: "ddate".to_string(),
                 content: "Hôm nay là ngày: {{date}}".to_string(),
-                description: None,
                 is_enabled: true,
-                created_at: now,
-                updated_at: now,
             },
         ];
 
         let default_env = Environment {
             id: "default".to_string(),
             name: "Mặc định".to_string(),
-            description: None,
             is_default: Some(true),
             snippets: sample_snippets,
         };

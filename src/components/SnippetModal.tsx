@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Tag,
 } from 'lucide-react';
+import { detectSnippetCycle } from '../utils/cycleDetection';
 
 export const SnippetModal: React.FC = () => {
   const {
@@ -61,6 +62,11 @@ export const SnippetModal: React.FC = () => {
     );
   }, [shortcut, snippets, editingSnippet]);
 
+  // Recursion Cycle Detection
+  const cyclePath = useMemo(() => {
+    return detectSnippetCycle(shortcut, content, snippets, editingSnippet?.id);
+  }, [shortcut, content, snippets, editingSnippet]);
+
   // Available existing snippets from active environment (for {{shortcut}} variable reuse)
   const reusableSnippets = useMemo(() => {
     return snippets.filter((s) => !editingSnippet || s.id !== editingSnippet.id);
@@ -86,7 +92,7 @@ export const SnippetModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!shortcut.trim() || !content) return;
+    if (!shortcut.trim() || !content || cyclePath) return;
     saveSnippet(shortcut, content);
   };
 
@@ -173,6 +179,24 @@ export const SnippetModal: React.FC = () => {
               placeholder={t('contentPlaceholder', settings.language)}
               className="w-full px-3.5 py-2.5 text-sm font-mono bg-slate-50 dark:bg-[#0c1220] text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-md border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500 resize-y transition-colors"
             />
+
+            {/* Recursion Cycle Warning */}
+            {cyclePath && (
+              <div className="mt-2.5 flex items-start gap-2.5 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs animate-in fade-in">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-semibold text-rose-700 dark:text-rose-300">
+                    Phát hiện vòng lặp vô tận (Infinite Loop):
+                  </div>
+                  <div className="font-mono font-medium text-rose-900 dark:text-rose-100 bg-rose-100/70 dark:bg-rose-900/50 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 inline-block">
+                    {cyclePath.join(' → ')}
+                  </div>
+                  <div className="text-[11px] text-rose-600 dark:text-rose-400">
+                    Các từ viết tắt không thể lồng đệ quy vòng tròn với nhau. Vui lòng điều chỉnh lại nội dung.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Dynamic Variable Dropdown Selector */}
             <div className="mt-2.5 relative" ref={varMenuRef}>
@@ -313,7 +337,8 @@ export const SnippetModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              disabled={!shortcut.trim() || !content}
+              disabled={!shortcut.trim() || !content || !!cyclePath}
+              title={cyclePath ? 'Không thể lưu do phát hiện vòng lặp vô tận' : undefined}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-md bg-sky-600 hover:bg-sky-500 active:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-sm shadow-sky-600/20 transition-all cursor-pointer"
             >
               <Save className="w-4 h-4" />

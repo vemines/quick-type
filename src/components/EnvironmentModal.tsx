@@ -9,6 +9,7 @@ import {
   Users,
   Edit2,
   Check,
+  ArrowRightLeft,
 } from 'lucide-react';
 
 export const EnvironmentModal: React.FC = () => {
@@ -21,6 +22,7 @@ export const EnvironmentModal: React.FC = () => {
     addEnvironment,
     renameEnvironment,
     deleteEnvironment,
+    openTransferModal,
     settings,
   } = useApp();
 
@@ -107,6 +109,13 @@ export const EnvironmentModal: React.FC = () => {
           {/* DIVIDER */}
           <div className="border-t border-slate-200 dark:border-slate-700/80 shrink-0" />
 
+          {/* List Header */}
+          <div className="flex items-center justify-between shrink-0 px-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Danh sách nhóm ({environments.length})
+            </span>
+          </div>
+
           {/* SCROLLABLE Environments List (Never pushed out of view) */}
           <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar pr-1 flex-1">
             {environments.map((env) => {
@@ -183,6 +192,7 @@ export const EnvironmentModal: React.FC = () => {
                       className="flex items-center gap-1.5 shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
+
                       {/* Rename Button */}
                       <button
                         type="button"
@@ -225,6 +235,18 @@ export const EnvironmentModal: React.FC = () => {
               );
             })}
           </div>
+
+          {/* Quick Transfer Button */}
+          {environments.length > 1 && (
+            <button
+              type="button"
+              onClick={() => openTransferModal(activeEnvironmentId)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border border-dashed border-sky-300 dark:border-sky-700/80 bg-sky-50/50 hover:bg-sky-50 dark:bg-sky-950/20 dark:hover:bg-sky-950/40 text-sky-700 dark:text-sky-300 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span>{t('transferBtnInEnvModal', settings.language)}</span>
+            </button>
+          )}
         </div>
 
         {/* Custom Delete Confirmation Sub-Modal */}
