@@ -1,4 +1,4 @@
-# ⚡ Quick Type - Smart Text Expander
+# ⚡ Quick Type
 
 <p align="center">
   <img src="public/favicon.ico" alt="Quick Type Logo" width="80" height="80" />
@@ -37,7 +37,7 @@
   - **Menu Chèn biến trực quan ✨**: Nhấp chọn trực tiếp ngày `{{date}}`, giờ `{{time}}`, thứ tiếng Việt `{{date:dddd}}` hoặc lồng các từ tắt con có sẵn trong nhóm mà không cần gõ cú pháp bằng tay.
   - **Phát hiện vòng lặp vô tận (Cycle Detection)**: Thuật toán DFS đồ thị phát hiện chu trình lặp đệ quy ngay khi nhập liệu (`/a → /b → /a`), hiện cảnh báo đỏ trực quan và khóa nút Lưu. Lõi Rust engine tích hợp cơ chế `visited` backtracking chống treo luồng triệt để.
   - **Cảnh báo trùng phím tắt**: Tự động phát hiện và cảnh báo khi phím tắt bị trùng trong cùng nhóm.
-- 📥 **Sao lưu & Nhập cấu hình thông minh (Smart JSON Import)**:
+- 📥 **Sao lưu & Khôi phục cấu hình (JSON Import)**:
   - Màn hình phân tích tệp cấu hình (Import Analysis) trước khi nạp.
   - **Gộp dữ liệu (Merge)**: Giữ nguyên dữ liệu hiện có, bổ sung nhóm và từ mới. Giải quyết xung đột trùng phím bằng giao diện so sánh song song trực quan.
   - **Ghi đè toàn bộ (Replace)**: Hộp cảnh báo đỏ liệt kê chi tiết danh sách nhóm và từ tắt sẽ bị xóa vĩnh viễn trước khi xác nhận.
@@ -127,5 +127,5 @@ Dự án được phân phối dưới giấy phép [MIT](LICENSE).
 ---
 
 <div align="center">
-  <sub>Crafted with passion 💖 by <a href="https://github.com/vemines">VeMines</a></sub>
+  <sub>Crafted with passion by <a href="https://github.com/vemines">VeMines</a></sub>
 </div>

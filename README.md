@@ -1,11 +1,11 @@
-# ⚡ Quick Type - Smart Text Expander
+# ⚡ Quick Type
 
 <p align="center">
   <img src="public/favicon.ico" alt="Quick Type Logo" width="80" height="80" />
 </p>
 
 <p align="center">
-  <b>A modern, smart text expansion and snippet utility for Windows.</b>
+  <b>A modern, text expansion and snippet utility for Windows.</b>
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
   - **Interactive Variable Menu ✨**: One-click insertion of `{{date}}`, `{{time}}`, `{{datetime}}`, `{{date:dddd}}`, or nested snippet variables without memorizing syntax.
   - **Cycle Detection Engine**: Client-side DFS graph algorithm detects recursive reference loops (`/a → /b → /a`) in real-time, displays a visual path warning, and blocks saving. The Rust core engine incorporates `visited` set backtracking and a 5-level depth cap to permanently prevent thread hangs.
   - **Shortcut Collision Warning**: Real-time detection of duplicate hotkeys in the same environment.
-- 📥 **Smart JSON Backup & Import Analysis**:
+- 📥 **JSON Backup & Import**:
   - Pre-import configuration analysis summarizing new groups, new snippets, and conflicts.
   - **Merge**: Safely keeps existing data while adding new groups and snippets, with side-by-side Expand Card conflict resolution.
   - **Replace**: Complete configuration overwrite with an alert modal detailing all groups and snippets to be deleted.
@@ -136,5 +136,5 @@ This project is licensed under the [MIT](LICENSE) License.
 ---
 
 <div align="center">
-  <sub>Crafted with passion 💖 by <a href="https://github.com/vemines">VeMines</a></sub>
+  <sub>Crafted with passion by <a href="https://github.com/vemines">VeMines</a></sub>
 </div>

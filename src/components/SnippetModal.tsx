@@ -62,6 +62,17 @@ export const SnippetModal: React.FC = () => {
     );
   }, [shortcut, snippets, editingSnippet]);
 
+  // Prefix conflict detection (when autoReplace is ON)
+  const prefixCollisions = useMemo(() => {
+    if (!settings.autoReplace || !shortcut.trim()) return [];
+    const clean = shortcut.trim().toLowerCase();
+    return snippets.filter((s) => {
+      if (!s.isEnabled || (editingSnippet && s.id === editingSnippet.id)) return false;
+      const other = s.shortcut.trim().toLowerCase();
+      return (other.startsWith(clean) || clean.startsWith(other)) && other !== clean;
+    });
+  }, [settings.autoReplace, shortcut, snippets, editingSnippet]);
+
   // Recursion Cycle Detection
   const cyclePath = useMemo(() => {
     return detectSnippetCycle(shortcut, content, snippets, editingSnippet?.id);
@@ -150,16 +161,32 @@ export const SnippetModal: React.FC = () => {
               value={shortcut}
               onChange={(e) => setShortcut(e.target.value)}
               placeholder={t('shortcutPlaceholder', settings.language)}
+              spellCheck={false}
+              autoCorrect="off"
+              autoCapitalize="off"
               className="w-full px-3.5 py-2 text-sm font-mono bg-slate-50 dark:bg-[#0c1220] text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-md border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500 transition-colors"
             />
 
-            {/* Conflict Warning */}
+            {/* Conflict Warning (Exact Duplicate) */}
             {conflictSnippet && (
               <div className="mt-2 flex items-center gap-2 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-200 text-xs">
                 <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
                 <span>
                   {t('conflictWarning', settings.language)} (Đang dùng: "{conflictSnippet.content.slice(0, 25)}...")
                 </span>
+              </div>
+            )}
+
+            {/* Prefix Conflict Warning when Auto-Replace is active */}
+            {prefixCollisions.length > 0 && !conflictSnippet && (
+              <div className="mt-2 flex items-start gap-2 p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-200 text-xs">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  {t('prefixSnippetSaveWarning', settings.language).replace(
+                    '{words}',
+                    prefixCollisions.map((s) => `"${s.shortcut}"`).join(', ')
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -177,6 +204,9 @@ export const SnippetModal: React.FC = () => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t('contentPlaceholder', settings.language)}
+              spellCheck={false}
+              autoCorrect="off"
+              autoCapitalize="off"
               className="w-full px-3.5 py-2.5 text-sm font-mono bg-slate-50 dark:bg-[#0c1220] text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-md border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/40 focus:border-sky-500 resize-y transition-colors"
             />
 

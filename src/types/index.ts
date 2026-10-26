@@ -56,3 +56,29 @@ export interface ImportAnalysis {
   lostEnvs: Array<{ id: string; name: string; snippetCount: number }>;
   lostSnippets: Array<{ envName: string; snippet: Snippet }>;
 }
+
+export interface PrefixConflictCluster {
+  id: string;
+  snippets: Snippet[];
+  selectedSnippetId: string | null;
+}
+
+export interface EnvPrefixConflict {
+  envId: string;
+  envName: string;
+  clusters: PrefixConflictCluster[];
+  isSkipped?: boolean;
+}
+
+export type PrefixConflictReason =
+  | 'settings_toggle'
+  | 'switch_env'
+  | 'snippet_save'
+  | 'import_complete';
+
+export interface PrefixConflictState {
+  conflicts: EnvPrefixConflict[];
+  reason: PrefixConflictReason;
+  pendingPayload?: any;
+}
+

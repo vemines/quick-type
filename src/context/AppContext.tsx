@@ -1,7 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Snippet, Environment, AppSettings, ToastMessage, ImportAnalysis, ImportConflictItem } from '../types';
+import {
+  Snippet,
+  Environment,
+  AppSettings,
+  ToastMessage,
+  ImportAnalysis,
+  ImportConflictItem,
+  PrefixConflictState,
+  EnvPrefixConflict,
+} from '../types';
 import { t, LanguageCode } from '../i18n';
 import { detectSnippetCycle } from '../utils/cycleDetection';
+import {
+  detectAllPrefixConflicts,
+  detectEnvPrefixConflicts,
+} from '../utils/prefixCollision';
 
 interface DuplicateConflict {
   candidate: Snippet;
@@ -23,6 +36,11 @@ interface AppContextType {
   isEnvModalOpen: boolean;
   isSettingsModalOpen: boolean;
   duplicateConflict: DuplicateConflict | null;
+  
+  // Prefix Conflict Modal
+  prefixConflictState: PrefixConflictState | null;
+  resolvePrefixConflicts: (resolvedConflicts: EnvPrefixConflict[]) => void;
+  dismissPrefixConflicts: () => void;
   
   // Import Modal & Diff
   importAnalysis: ImportAnalysis | null;
@@ -146,6 +164,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [importAnalysis, setImportAnalysis] = useState<ImportAnalysis | null>(null);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [transferTargetEnvId, setTransferTargetEnvId] = useState<string | null>(null);
+  const [prefixConflictState, setPrefixConflictState] = useState<PrefixConflictState | null>(null);
 
   const openTransferModal = useCallback((targetEnvId?: string) => {
     setTransferTargetEnvId(targetEnvId || activeEnvironmentId);
@@ -389,6 +408,114 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(t('toastSaved', settings.language), 'info');
   }, [duplicateConflict, activeEnvironment.id, settings.language, showToast]);
 
+  // Prefix Conflict Handlers
+  const resolvePrefixConflicts = useCallback(
+    (resolvedConflicts: EnvPrefixConflict[]) => {
+      if (!prefixConflictState) return;
+      const { reason, pendingPayload } = prefixConflictState;
+
+      // 1. Update snippet states across environments
+      setEnvironments((prevEnvs) =>
+        prevEnvs.map((env) => {
+          const envResolution = resolvedConflicts.find((c) => c.envId === env.id && !c.isSkipped);
+          if (!envResolution) return env;
+
+          const disabledSnippetIds = new Set<string>();
+          const enabledSnippetIds = new Set<string>();
+
+          envResolution.clusters.forEach((cluster) => {
+            cluster.snippets.forEach((s) => {
+              if (cluster.selectedSnippetId === s.id) {
+                enabledSnippetIds.add(s.id);
+              } else {
+                disabledSnippetIds.add(s.id);
+              }
+            });
+          });
+
+          return {
+            ...env,
+            snippets: env.snippets.map((s) => {
+              if (disabledSnippetIds.has(s.id)) {
+                return { ...s, isEnabled: false };
+              }
+              if (enabledSnippetIds.has(s.id)) {
+                return { ...s, isEnabled: true };
+              }
+              return s;
+            }),
+          };
+        })
+      );
+
+      // 2. Complete pending action
+      if (reason === 'settings_toggle') {
+        const newSettings = pendingPayload?.newSettings || {};
+        setSettings((prev) => ({ ...prev, ...newSettings, autoReplace: true }));
+        showToast(t('prefixAutoReplaceEnabled', settings.language), 'success');
+      } else if (reason === 'switch_env' && pendingPayload?.targetEnvId) {
+        setActiveEnvironmentId(pendingPayload.targetEnvId);
+        showToast(t('toastEnvSwitched', settings.language), 'info');
+      } else if (reason === 'snippet_save' && pendingPayload) {
+        const { shortcut, content, editingId } = pendingPayload;
+        const cleanShortcut = shortcut.trim();
+
+        const activeRes = resolvedConflicts.find((c) => c.envId === activeEnvironment.id);
+        let candidateEnabled = true;
+        if (activeRes) {
+          for (const cl of activeRes.clusters) {
+            const match = cl.snippets.find(
+              (s) =>
+                s.id === (editingId || 'temp_candidate') ||
+                s.shortcut.toLowerCase() === cleanShortcut.toLowerCase()
+            );
+            if (match) {
+              candidateEnabled = cl.selectedSnippetId === match.id;
+              break;
+            }
+          }
+        }
+
+        setEnvironments((prevEnvs) =>
+          prevEnvs.map((env) => {
+            if (env.id !== activeEnvironment.id) return env;
+
+            let updatedSnippets: Snippet[];
+            if (editingId) {
+              updatedSnippets = env.snippets.map((s) =>
+                s.id === editingId
+                  ? { ...s, shortcut: cleanShortcut, content, isEnabled: candidateEnabled }
+                  : s
+              );
+            } else {
+              updatedSnippets = [
+                {
+                  id: 'snip_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                  shortcut: cleanShortcut,
+                  content,
+                  isEnabled: candidateEnabled,
+                },
+                ...env.snippets,
+              ];
+            }
+            return { ...env, snippets: updatedSnippets };
+          })
+        );
+        closeSnippetModal();
+        showToast(t('toastSaved', settings.language), 'success');
+      } else if (reason === 'import_complete') {
+        showToast(t('toastImportSuccess', settings.language), 'success');
+      }
+
+      setPrefixConflictState(null);
+    },
+    [prefixConflictState, activeEnvironment.id, settings.language, showToast, closeSnippetModal]
+  );
+
+  const dismissPrefixConflicts = useCallback(() => {
+    setPrefixConflictState(null);
+  }, []);
+
   // Snippet CRUD
   const saveSnippet = useCallback(
     (shortcut: string, content: string): boolean => {
@@ -410,6 +537,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           'error'
         );
         return false;
+      }
+
+      // If Auto-Replace is ON, check for prefix collision
+      if (settings.autoReplace) {
+        const candidateSnippet: Snippet = {
+          id: editingSnippet ? editingSnippet.id : 'temp_candidate',
+          shortcut: trimmedShortcut,
+          content: trimmedContent,
+          isEnabled: true,
+        };
+        const clusters = detectEnvPrefixConflicts(
+          activeEnvironment,
+          candidateSnippet,
+          editingSnippet?.id
+        );
+        if (clusters.length > 0) {
+          setPrefixConflictState({
+            conflicts: [
+              {
+                envId: activeEnvironment.id,
+                envName: activeEnvironment.name,
+                clusters,
+                isSkipped: false,
+              },
+            ],
+            reason: 'snippet_save',
+            pendingPayload: {
+              shortcut: trimmedShortcut,
+              content: trimmedContent,
+              editingId: editingSnippet?.id,
+            },
+          });
+          return false;
+        }
       }
 
       let conflictDetected = false;
@@ -509,6 +670,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
           return;
         }
+
+        // If in Auto-Replace mode, check for prefix collisions
+        if (settings.autoReplace) {
+          const candidateSnippet: Snippet = {
+            ...target,
+            isEnabled: true,
+          };
+          const clusters = detectEnvPrefixConflicts(
+            activeEnvironment,
+            candidateSnippet,
+            target.id
+          );
+          if (clusters.length > 0) {
+            setPrefixConflictState({
+              conflicts: [
+                {
+                  envId: activeEnvironment.id,
+                  envName: activeEnvironment.name,
+                  clusters,
+                  isSkipped: false,
+                },
+              ],
+              reason: 'snippet_save',
+              pendingPayload: {
+                shortcut: target.shortcut,
+                content: target.content,
+                editingId: target.id,
+              },
+            });
+            return;
+          }
+        }
       }
 
       setEnvironments((prevEnvs) =>
@@ -523,7 +716,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         })
       );
     },
-    [snippets, activeEnvironment.id]
+    [snippets, activeEnvironment, settings.autoReplace]
   );
 
   // Duplication with _1 and disabled by default
@@ -566,10 +759,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Environment CRUD
   const switchEnvironment = useCallback(
     (id: string) => {
+      if (settings.autoReplace) {
+        const targetEnv = environments.find((e) => e.id === id);
+        if (targetEnv) {
+          const clusters = detectEnvPrefixConflicts(targetEnv);
+          if (clusters.length > 0) {
+            setPrefixConflictState({
+              conflicts: [
+                {
+                  envId: targetEnv.id,
+                  envName: targetEnv.name,
+                  clusters,
+                  isSkipped: false,
+                },
+              ],
+              reason: 'switch_env',
+              pendingPayload: { targetEnvId: id },
+            });
+            return;
+          }
+        }
+      }
       setActiveEnvironmentId(id);
       showToast(t('toastEnvSwitched', settings.language), 'info');
     },
-    [settings.language, showToast]
+    [environments, settings.autoReplace, settings.language, showToast]
   );
 
   // Add environment with duplicate prevention and NO auto-switch
@@ -642,6 +856,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Settings
   const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
+    if (newSettings.autoReplace === true && !settings.autoReplace) {
+      const conflicts = detectAllPrefixConflicts(environments);
+      if (conflicts.length > 0) {
+        setPrefixConflictState({
+          conflicts,
+          reason: 'settings_toggle',
+          pendingPayload: { newSettings },
+        });
+        return;
+      }
+    }
+
     setSettings((prev) => ({ ...prev, ...newSettings }));
 
     if (newSettings.startWithWindows !== undefined && isTauri()) {
@@ -657,7 +883,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       });
     }
-  }, [isTauri]);
+  }, [settings.autoReplace, environments, isTauri]);
 
   const setTheme = useCallback((theme: 'light' | 'dark') => {
     setSettings((prev) => ({ ...prev, theme }));
@@ -898,6 +1124,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (importAnalysis.conflicts.length === 0) {
       setImportAnalysis(null);
+      if (settings.autoReplace) {
+        const prefixConflicts = detectAllPrefixConflicts(updatedEnvs);
+        if (prefixConflicts.length > 0) {
+          setPrefixConflictState({
+            conflicts: prefixConflicts,
+            reason: 'import_complete',
+          });
+          return;
+        }
+      }
       showToast(t('importMergeSuccess', settings.language), 'success');
     }
   }, [importAnalysis, environments, settings.language, showToast]);
@@ -919,6 +1155,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setImportAnalysis(null);
+    const willAutoReplace = incomingSettings?.autoReplace ?? settings.autoReplace;
+    if (willAutoReplace && incomingEnvs.length > 0) {
+      const prefixConflicts = detectAllPrefixConflicts(incomingEnvs);
+      if (prefixConflicts.length > 0) {
+        setPrefixConflictState({
+          conflicts: prefixConflicts,
+          reason: 'import_complete',
+        });
+        return;
+      }
+    }
     showToast(t('toastImportSuccess', settings.language), 'success');
   }, [importAnalysis, settings.language, showToast]);
 
@@ -927,6 +1174,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!importAnalysis) return;
       if (overwriteConflictIds.length === 0) {
         setImportAnalysis(null);
+        if (settings.autoReplace) {
+          const prefixConflicts = detectAllPrefixConflicts(environments);
+          if (prefixConflicts.length > 0) {
+            setPrefixConflictState({
+              conflicts: prefixConflicts,
+              reason: 'import_complete',
+            });
+            return;
+          }
+        }
         showToast(t('importMergeSuccess', settings.language), 'success');
         return;
       }
@@ -935,36 +1192,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         overwriteConflictIds.includes(c.id)
       );
 
-      setEnvironments((prevEnvs) =>
-        prevEnvs.map((env) => {
-          const envOverwrites = overwriteItems.filter(
-            (item) => item.targetEnvId === env.id || item.targetEnvName.toLowerCase() === env.name.toLowerCase()
-          );
-          if (envOverwrites.length === 0) return env;
+      const updatedEnvs = environments.map((env) => {
+        const envOverwrites = overwriteItems.filter(
+          (item) => item.targetEnvId === env.id || item.targetEnvName.toLowerCase() === env.name.toLowerCase()
+        );
+        if (envOverwrites.length === 0) return env;
 
-          const overwriteMap = new Map(
-            envOverwrites.map((item) => [item.shortcut.toLowerCase(), item.incomingSnippet])
-          );
+        const overwriteMap = new Map(
+          envOverwrites.map((item) => [item.shortcut.toLowerCase(), item.incomingSnippet])
+        );
 
-          const updatedSnippets = env.snippets.map((snip) => {
-            const replacement = overwriteMap.get(snip.shortcut.toLowerCase());
-            if (replacement) {
-              return {
-                ...snip,
-                content: replacement.content,
-              };
-            }
-            return snip;
-          });
+        const updatedSnippets = env.snippets.map((snip) => {
+          const replacement = overwriteMap.get(snip.shortcut.toLowerCase());
+          if (replacement) {
+            return {
+              ...snip,
+              content: replacement.content,
+            };
+          }
+          return snip;
+        });
 
-          return { ...env, snippets: updatedSnippets };
-        })
-      );
+        return { ...env, snippets: updatedSnippets };
+      });
 
+      setEnvironments(updatedEnvs);
       setImportAnalysis(null);
+
+      if (settings.autoReplace) {
+        const prefixConflicts = detectAllPrefixConflicts(updatedEnvs);
+        if (prefixConflicts.length > 0) {
+          setPrefixConflictState({
+            conflicts: prefixConflicts,
+            reason: 'import_complete',
+          });
+          return;
+        }
+      }
+
       showToast(t('importMergeSuccess', settings.language), 'success');
     },
-    [importAnalysis, settings.language, showToast]
+    [importAnalysis, environments, settings.autoReplace, settings.language, showToast]
   );
 
   const transferSnippets = useCallback(
@@ -992,42 +1260,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let transferredCount = 0;
       const now = Date.now();
 
-      setEnvironments((prevEnvs) =>
-        prevEnvs.map((env) => {
-          if (env.id !== targetEnvId) return env;
+      const existingMap = new Map(
+        targetEnv.snippets.map((s) => [s.shortcut.toLowerCase(), s])
+      );
+      const newSnippets = [...targetEnv.snippets];
 
-          const existingMap = new Map(
-            env.snippets.map((s) => [s.shortcut.toLowerCase(), s])
-          );
-          const newSnippets = [...env.snippets];
-
-          snippetsToTransfer.forEach((s) => {
-            const existing = existingMap.get(s.shortcut.toLowerCase());
-            if (existing) {
-              if (overwriteConflict) {
-                const idx = newSnippets.findIndex((item) => item.id === existing.id);
-                if (idx >= 0) {
-                  newSnippets[idx] = {
-                    ...newSnippets[idx],
-                    content: s.content,
-                  };
-                  transferredCount++;
-                }
-              }
-            } else {
-              newSnippets.push({
-                ...s,
-                id: 'snip_' + (now + Math.floor(Math.random() * 10000)) + '_' + Math.random().toString(36).substring(2, 6),
-              });
+      snippetsToTransfer.forEach((s) => {
+        const existing = existingMap.get(s.shortcut.toLowerCase());
+        if (existing) {
+          if (overwriteConflict) {
+            const idx = newSnippets.findIndex((item) => item.id === existing.id);
+            if (idx >= 0) {
+              newSnippets[idx] = {
+                ...newSnippets[idx],
+                content: s.content,
+              };
               transferredCount++;
             }
+          }
+        } else {
+          newSnippets.push({
+            ...s,
+            id: 'snip_' + (now + Math.floor(Math.random() * 10000)) + '_' + Math.random().toString(36).substring(2, 6),
           });
+          transferredCount++;
+        }
+      });
 
-          return { ...env, snippets: newSnippets };
-        })
+      const updatedTargetEnv: Environment = {
+        ...targetEnv,
+        snippets: newSnippets,
+      };
+
+      setEnvironments((prevEnvs) =>
+        prevEnvs.map((env) => (env.id === targetEnvId ? updatedTargetEnv : env))
       );
 
       setIsTransferModalOpen(false);
+
+      if (settings.autoReplace) {
+        const clusters = detectEnvPrefixConflicts(updatedTargetEnv);
+        if (clusters.length > 0) {
+          setPrefixConflictState({
+            conflicts: [
+              {
+                envId: updatedTargetEnv.id,
+                envName: updatedTargetEnv.name,
+                clusters,
+                isSkipped: false,
+              },
+            ],
+            reason: 'import_complete',
+          });
+          return transferredCount;
+        }
+      }
+
       showToast(
         t('transferSuccess', settings.language)
           .replace('{count}', String(transferredCount))
@@ -1036,7 +1324,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
       return transferredCount;
     },
-    [environments, settings.language, showToast]
+    [environments, settings.autoReplace, settings.language, showToast]
   );
 
   // UniKey .txt Import
@@ -1110,6 +1398,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isEnvModalOpen,
     isSettingsModalOpen,
     duplicateConflict,
+    prefixConflictState,
+    resolvePrefixConflicts,
+    dismissPrefixConflicts,
     importAnalysis,
     dismissImportAnalysis,
     executeMergeImport,

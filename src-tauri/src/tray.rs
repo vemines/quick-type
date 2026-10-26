@@ -103,7 +103,7 @@ pub fn create_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let _tray = TrayIconBuilder::with_id("main-tray")
-        .tooltip("Quick Type - Smart Text Expander")
+        .tooltip("Quick Type")
         .icon(icon)
         .menu(&menu)
         .show_menu_on_left_click(false)

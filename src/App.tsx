@@ -8,6 +8,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { DuplicateConflictModal } from './components/DuplicateConflictModal';
 import { ImportConfigModal } from './components/ImportConfigModal';
 import { TransferSnippetsModal } from './components/TransferSnippetsModal';
+import { PrefixConflictModal } from './components/PrefixConflictModal';
 import { ToastContainer } from './components/Toast';
 
 const AppContent: React.FC = () => {
@@ -29,6 +30,7 @@ const AppContent: React.FC = () => {
       <DuplicateConflictModal />
       <ImportConfigModal key={importAnalysis?.importId || 'idle'} />
       <TransferSnippetsModal />
+      <PrefixConflictModal />
       <ToastContainer />
     </div>
   );
