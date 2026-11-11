@@ -26,6 +26,7 @@ pub struct ExpanderState {
     pub auto_replace: bool,
     pub language: String,
     pub active_snippets: HashMap<String, String>,
+    pub sorted_active_snippets: Vec<(String, String)>,
     pub all_snippets: HashMap<String, String>,
 }
 
@@ -37,8 +38,20 @@ impl ExpanderState {
             auto_replace: false,
             language: "vi".to_string(),
             active_snippets: HashMap::new(),
+            sorted_active_snippets: Vec::new(),
             all_snippets: HashMap::new(),
         }
+    }
+
+    pub fn update_active_snippets(&mut self, active_map: HashMap<String, String>) {
+        let mut sorted: Vec<(String, String)> = active_map.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+        // Sort descending by shortcut char length, then byte length
+        sorted.sort_by(|a, b| {
+            b.0.chars().count().cmp(&a.0.chars().count())
+                .then_with(|| b.0.len().cmp(&a.0.len()))
+        });
+        self.sorted_active_snippets = sorted;
+        self.active_snippets = active_map;
     }
 }
 
@@ -551,8 +564,16 @@ unsafe extern "system" fn low_level_keyboard_proc(
                 let hotkey_char = state.trigger_hotkey.chars().next().unwrap_or('`');
                 if c == hotkey_char && !state.auto_replace {
                     let text_before_hotkey = &current_buf[..current_buf.len() - c.len_utf8()];
-                    for (shortcut, content) in &state.active_snippets {
+                    for (shortcut, content) in &state.sorted_active_snippets {
                         if text_before_hotkey.ends_with(shortcut) {
+                            let prefix_len = text_before_hotkey.len() - shortcut.len();
+                            let is_word_boundary = prefix_len == 0 || {
+                                let prev = text_before_hotkey[..prefix_len].chars().next_back().unwrap();
+                                prev.is_whitespace() || prev.is_ascii_punctuation()
+                            };
+                            if !is_word_boundary {
+                                continue;
+                            }
                             let backspaces = shortcut.chars().count();
                             {
                                 let mut b = RECENT_BUFFER
@@ -584,7 +605,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                     if !is_delimiter {
                         // Check immediate match when typing the last character of a shortcut
                         let mut matched = None;
-                        for (shortcut, content) in &state.active_snippets {
+                        for (shortcut, content) in &state.sorted_active_snippets {
                             if current_buf.ends_with(shortcut) {
                                 let prefix_len = current_buf.len() - shortcut.len();
                                 let is_word_boundary = prefix_len == 0 || {
@@ -627,7 +648,7 @@ unsafe extern "system" fn low_level_keyboard_proc(
                         // Check delimiter-triggered match (Space, Enter, Tab, etc.)
                         let text_before_delim = &current_buf[..current_buf.len() - c.len_utf8()];
                         let mut matched_delim = None;
-                        for (shortcut, content) in &state.active_snippets {
+                        for (shortcut, content) in &state.sorted_active_snippets {
                             if text_before_delim.ends_with(shortcut) {
                                 let prefix_len = text_before_delim.len() - shortcut.len();
                                 let is_word_boundary = prefix_len == 0 || {

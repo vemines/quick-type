@@ -15,6 +15,7 @@ pub fn run() {
         state.auto_replace = initial_data.settings.auto_replace;
         state.language = initial_data.settings.language.clone();
 
+        let mut active_map = std::collections::HashMap::new();
         if let Some(active_env) = initial_data
             .environments
             .iter()
@@ -26,13 +27,14 @@ pub fn run() {
                     snippet.content.clone(),
                 );
                 if snippet.is_enabled {
-                    state.active_snippets.insert(
+                    active_map.insert(
                         snippet.shortcut.to_lowercase(),
                         snippet.content.clone(),
                     );
                 }
             }
         }
+        state.update_active_snippets(active_map);
     }
 
     // 2. Start global low-level keyboard hook & watchdog

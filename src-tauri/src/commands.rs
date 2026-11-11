@@ -31,7 +31,7 @@ pub fn sync_expander_from_data(data: &AppData) {
             }
         }
 
-        state.active_snippets = active_map;
+        state.update_active_snippets(active_map);
         state.all_snippets = all_map;
     }
 }
